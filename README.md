@@ -1,112 +1,124 @@
-# Career Quest Online | Cypress Automation
+# The Adulting Quest | Shared Cypress Automation
 
-An eight-test end-to-end suite for Career Quest Online, part of The Adulting Quest, a web application I own.
+A reusable end-to-end framework for **Career Quest** and **Alliance Quest**.
+Built from Veronica Mitchell's original eight-test Career Quest suite.
 
-This project demonstrates hands-on Cypress automation for authentication, navigation, content verification and profile workflows.
+## What the framework covers
 
-## Test coverage
+| Suite | Checks | Test cases |
+| --- | --- | --- |
+| Public authentication | Sign-in controls, email format validation, protected routes for both games | 4 |
+| Shared account | Login, both quest links, profile, cancel editor, sign-out and protected profile route | 4 |
+| Career Quest | Map, introduction and return, authenticated reload, mobile page width | 4 |
+| Alliance Quest | Map, introduction and return, authenticated reload, mobile page width | 4 |
 
-| Test | What it verifies |
-| --- | --- |
-| Sign-in form | Email, password, sign-in button and password recovery link are visible |
-| Email format validation | The browser flags an incorrectly formatted email |
-| Successful login | Valid credentials open the dashboard and display the expected profile |
-| Career Quest navigation | Continue opens the quest map with its heading and progress labels |
-| Introductory activity | Basecamp expands, How This Works opens and Back to the map returns to the quest |
-| Profile navigation | Profile opens the Adventurer's Ledger with the expected account name |
-| Profile editor | The name and avatar editor opens with the saved name and closes using Cancel |
-| Sign-out | Signing out returns to the sign-in form |
+**16 test cases defined.** These check navigation and introductory content; they do
+not submit answers, earn XP, save profile changes, purchase access, or complete a game.
+The mobile test checks page overflow at 390 x 844; it is not a visual comparison test.
 
-All eight tests passed locally in Chrome during development.
+## Setup on your Windows computer
 
-## Tools and approach
+Use Node.js 24. Open this folder in VS Code and use its terminal:
 
-- Cypress 16.1.1
-- JavaScript
-- Node.js 24
-- Git and GitHub
-- Reusable helpers for login and navigation
-- Independent test setup using Cypress's default test isolation
-- Assertions for page content, form controls and destination paths
-- Local credentials excluded from version control
-- Credential typing hidden from the Cypress command log
-
-## Running the tests
-
-### 1. Install dependencies
-
-Use Node.js 24 and npm. From the project folder, run:
-
-```bash
-npm ci
+```powershell
+npm.cmd ci
+Copy-Item cypress.env.example.json cypress.env.json
 ```
 
-### 2. Configure an authorized test account
+Edit `cypress.env.json` with your dedicated test account's email and password.
+Set `profileName` to the exact active Adventurer name. The default is
+`Adulting Quest Test Teen`. The account must finish onboarding and be able to
+open both quest maps. Paid access is not required for the introductory tests.
+The tests support either Start quest or Continue, regardless of existing progress.
 
-Create `cypress.env.json` in the project root:
+`cypress.env.json` is ignored by Git. Never paste credentials into test code or commit
+this file. Credential typing is hidden from the command log. Failure screenshots can
+still contain account information; keep them private.
 
-```json
-{
-  "testEmail": "YOUR_TEST_ACCOUNT_EMAIL",
-  "testPassword": "YOUR_TEST_ACCOUNT_PASSWORD"
-}
+## Run tests
+
+```powershell
+npm.cmd run open          # Interactive Cypress runner
+npm.cmd run test:public   # No credentials needed
+npm.cmd run test:account  # Shared login and profile checks
+npm.cmd run test:career   # Career Quest only
+npm.cmd run test:alliance # Alliance Quest only
+npm.cmd test              # All 16 checks
 ```
 
-This file is excluded by `.gitignore`. Real credentials are not provided in this repository.
+The default headless browser is Electron. For installed Chrome:
 
-Authenticated tests expect a dedicated Adventurer profile named
-`Adulting Quest Test Teen` with Career Quest access and existing progress
-so the dashboard displays Continue.
-
-To use a different profile, update the expected profile name in the test
-file and ensure its access and progress match these prerequisites.
-
-### 3. Open Cypress
-
-```bash
-npx cypress open
+```powershell
+npm.cmd test -- --browser chrome
 ```
 
-Choose E2E Testing, select Chrome and open:
+To target a staging deployment:
+
+```powershell
+$env:CYPRESS_BASE_URL = 'https://YOUR-STAGING-HOST'
+npm.cmd test
+Remove-Item Env:CYPRESS_BASE_URL
+```
+
+## Structure
 
 ```text
-cypress/e2e/career-quest.cy.js
+cypress.config.js                 Base URL, viewport, retries, JUnit reports
+cypress/support/commands.js        Shared login/session, profile, quest, intro helpers
+cypress/support/quests.js          Game names, routes and text
+cypress/support/quest-suite.js     Shared game checks applied to both quests
+cypress/e2e/public/auth.cy.js      Anonymous access checks
+cypress/e2e/shared/account.cy.js   Login and profile checks
+cypress/e2e/quests/                Separate game entry points
+.github/workflows/                Public smoke and authenticated regression
 ```
 
-### Run without the interactive test runner
+`cy.session()` caches the dedicated test login, validates restored sessions against
+the dashboard, and keeps tests isolated. Tests use route-specific links, semantic
+navigation, labels and headings. No fixed sleeps or blanket exception suppression.
+The deployed app has no `data-testid` attributes; the next selector improvement
+requires David to add stable attributes to the app itself.
 
-```bash
-npx cypress run --browser chrome
-```
+JUnit reports are written to `reports/`; local failures produce screenshots in
+`cypress/screenshots/`. Both directories are ignored by Git.
 
-On Windows PowerShell, use `npm.cmd` and `npx.cmd` if script execution
-settings prevent the commands above from running.
+## GitHub Actions
 
-## Scope and limitations
+**Public smoke tests** run on push, pull request, or a manual run without credentials.
 
-This is an initial smoke test suite against the live application at
-https://play.theadultingquest.com.
+**Authenticated quest regression** runs only when manually requested. In GitHub,
+open Settings > Secrets and variables > Actions and add:
 
-It covers selected user journeys. It does not yet verify answer
-submission, XP calculations, purchases, profile saving or the complete
-game experience.
+- Secret `AQ_TEST_EMAIL`
+- Secret `AQ_TEST_PASSWORD`
+- Optional variable `AQ_TEST_PROFILE_NAME` (default: `Adulting Quest Test Teen`)
 
-The email validation test checks browser input validity without
-submitting the form. The editor test checks opening and closing the
-editor without changing or saving profile data.
+Then open Actions > Authenticated quest regression > Run workflow.
+Missing credentials fail clearly; authenticated tests are not silently skipped.
+Workflows upload JUnit reports, not account screenshots. No recurring schedule
+has been enabled.
 
-Tests depend on the application's availability and the configured test
-profile. Text changes or changes to that profile's progress may require
-test updates.
+## Validation status for this framework revision
 
-## Planned improvements
+- Executed locally on Windows in Cypress 16.1.1.
+- Public authentication: 4 passed.
+- Shared account and profile: 4 passed.
+- Career Quest: 3 passed, 1 failed.
+- Alliance Quest: 3 passed, 1 failed.
+- Overall: 14 passed, 2 failed.
+- Both failures detected horizontal page overflow at a 390 x 844 mobile viewport.
+- Defect reported to the developer; mobile checks remain enabled pending a fix.
+- GitHub Actions workflows are included but have not yet been verified.
 
-- Automated execution through GitHub Actions
-- Additional validation and gameplay scenarios
-- Stable test selectors using data attributes
-- API checks and broader browser coverage
+## Next gameplay coverage
+
+Before adding answer submission and XP assertions, use a staging account with a
+repeatable reset/seed mechanism. Add fixtures for expected answers, XP rules,
+locked/unlocked steps, and both player roles. Validate persistence by reloading
+and signing back in. Keep destructive gameplay tests separate from live smoke tests.
 
 ## Author
 
-Veronica Mitchell  
-IT and QA leader | Founder, The Adulting Quest and NabbitIt
+Veronica Mitchell | IT and QA leader | Founder, The Adulting Quest and NabbitIt
+
+Automation portfolio: https://github.com/vmitch1/career-quest-tests

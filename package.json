@@ -1,10 +1,16 @@
 {
   "name": "career-quest-tests",
   "version": "1.0.0",
-  "description": "",
+  "description": "Shared Cypress automation framework for The Adulting Quest: Career Quest and Alliance Quest.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "node --experimental-vm-modules scripts/check-syntax.cjs",
+    "open": "cypress open",
+    "test": "cypress run",
+    "test:public": "cypress run --spec \"cypress/e2e/public/**/*.cy.js\"",
+    "test:account": "cypress run --spec \"cypress/e2e/shared/**/*.cy.js\"",
+    "test:career": "cypress run --spec \"cypress/e2e/quests/career-quest.cy.js\"",
+    "test:alliance": "cypress run --spec \"cypress/e2e/quests/alliance-quest.cy.js\""
   },
   "keywords": [],
   "author": "",
