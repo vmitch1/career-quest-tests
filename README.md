@@ -100,15 +100,15 @@ has been enabled.
 
 ## Validation status for this framework revision
 
-- Executed locally on Windows in Cypress 16.1.1.
-- Public authentication: 4 passed.
-- Shared account and profile: 4 passed.
-- Career Quest: 3 passed, 1 failed.
-- Alliance Quest: 3 passed, 1 failed.
-- Overall: 14 passed, 2 failed.
-- Both failures detected horizontal page overflow at a 390 x 844 mobile viewport.
-- Defect reported to the developer; mobile checks remain enabled pending a fix.
-- GitHub Actions workflows are included but have not yet been verified.
+All 16 checks passed locally:
+- Public authentication: 4 passed
+- Account and profile: 4 passed
+- Career Quest: 4 passed
+- Alliance Quest: 4 passed
+
+The previously reported mobile overflow failures passed after the website update.
+
+GitHub Actions: public tests remain blocked by HTTP 403 Forbidden when accessing the website. Successful CI validation is still pending.
 
 ## Next gameplay coverage
 
