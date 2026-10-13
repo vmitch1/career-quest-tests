@@ -17,7 +17,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run test:public
+      - run: npm run test:public -- --browser chrome
       - uses: actions/upload-artifact@v4
         if: always()
         with:
