@@ -1,23 +1,41 @@
 name: Public smoke tests
+
 on:
   push:
   pull_request:
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+
       - run: npm ci
+
       - run: npm run check
+
+      - name: Diagnose website access
+        run: |
+          curl -sS --max-time 30 \
+            -D /tmp/aq-headers.txt \
+            -o /tmp/aq-response.html \
+            https://play.theadultingquest.com/auth
+          cat /tmp/aq-headers.txt
+          head -c 2000 /tmp/aq-response.html
+
       - run: npm run test:public -- --browser chrome
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
